@@ -5,14 +5,6 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-load(
-    "@org_tensorflow//tensorflow:tensorflow.bzl",
-    "tf_custom_op_library",
-    "tf_gen_op_wrapper_py",
-    "tf_kernel_library",
-)
-load("@org_tensorflow//tensorflow:tensorflow.bzl", "tf_custom_op_py_library")
-
 cc_library(
     name = "types",
     hdrs = ["platform/types.h"],
@@ -22,19 +14,8 @@ cc_library(
     name = "bspline",
     hdrs = ["kernels/bspline.h"],
     deps = [
-        "@org_tensorflow//tensorflow/core:framework_headers_lib",
-        "@protobuf_archive//:protobuf",
-    ],
-)
-
-cc_test(
-    name = "bspline_test",
-    size = "small",
-    srcs = ["kernels/bspline_test.cc"],
-    deps = [
-        ":bspline",
-        "@org_tensorflow//tensorflow/core:test",
-        "@com_google_googletest//:gtest_main",
+        "@local_config_tf//:libtensorflow_framework",
+        "@local_config_tf//:tf_header_lib",
     ],
 )
 
@@ -43,19 +24,6 @@ cc_library(
     hdrs = ["kernels/cubic_interpolation.h"],
     deps = [
         ":bspline",
-        "@eigen_archive//:eigen",
-    ],
-)
-
-cc_test(
-    name = "cubic_interpolation_test",
-    size = "small",
-    srcs = ["kernels/cubic_interpolation_test.cc"],
-    deps = [
-        ":cubic_interpolation",
-        "@org_tensorflow//tensorflow/core:test",
-        "@com_google_googletest//:gtest_main",
-        "@eigen_archive//:eigen",
     ],
 )
 
@@ -64,20 +32,8 @@ cc_library(
     hdrs = ["kernels/apply_deformation.h"],
     deps = [
         ":types",
-        "@org_tensorflow//tensorflow/core:framework_headers_lib",
-        "@eigen_archive//:eigen",
-    ],
-)
-
-cc_test(
-    name = "apply_deformation_test",
-    size = "small",
-    srcs = ["kernels/apply_deformation_test.cc"],
-    deps = [
-        ":apply_deformation",
-        "@org_tensorflow//tensorflow/core:test",
-        "@com_google_googletest//:gtest_main",
-        "@eigen_archive//:eigen",
+        "@local_config_tf//:libtensorflow_framework",
+        "@local_config_tf//:tf_header_lib",
     ],
 )
 
@@ -101,14 +57,13 @@ cc_library(
     deps = [
         ":ops_hdrs",
         ":types",
-        "@org_tensorflow//tensorflow/core:framework_headers_lib",
-        "@eigen_archive//:eigen",
-        "@protobuf_archive//:protobuf",
+        "@local_config_tf//:libtensorflow_framework",
+        "@local_config_tf//:tf_header_lib",
     ],
     alwayslink = 1,
 )
 
-tf_kernel_library(
+cc_library(
     name = "augmentation_ops_kernels",
     srcs = [
         "kernels/apply_deformation_ops.cc",
@@ -122,8 +77,7 @@ tf_kernel_library(
         ":apply_deformation",
         ":cubic_interpolation",
         ":ops_hdrs",
-        ":types",
-        "@org_tensorflow//tensorflow/core:framework_headers_lib",
+        ":types"
     ],
     alwayslink = 1,
 )
@@ -137,7 +91,8 @@ cc_library(
     ],
 )
 
-tf_custom_op_library(
+# WARNING: Run with -D_GLIBCXX.. to ensure it works with your local TF.
+cc_library(
     name = "python/ops/_augmentation_ops.so",
     srcs = [
         "ops/apply_deformation_ops.cc",
@@ -151,37 +106,19 @@ tf_custom_op_library(
         ":augmentation_ops_kernels",
         ":types",
     ],
+    copts = ["-pthread", "-std=c++11", "-D_GLIBCXX_USE_CXX11_ABI=0"]
 )
 
 ## Python API
-
-tf_gen_op_wrapper_py(
-    name = "gen_augmentation_ops_py",
-    # 'out' has no gen_ prefix as we fully generate the python code.
-    out = "augmentation_ops.py",
-    deps = [
-        ":augmentation_ops_interfaces",
-    ],
-)
-
-tf_custom_op_py_library(
+# Had to remove the op wrapper since it is only available if you build TF.
+py_library(
     name = "augmentation_ops",
     srcs = [
-        "__init__.py",
-        "augmentation_ops.py",
+        "__init__.py"
     ],
-    dso = [":python/ops/_augmentation_ops.so"],
-    kernels = [
-        ":augmentation_ops_kernels",
-        ":augmentation_ops_interfaces",
-    ],
+    data = [":python/ops/_augmentation_ops.so"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
-    deps = [
-        ":gen_augmentation_ops_py",
-        "@org_tensorflow//tensorflow/python:framework_for_generated_wrappers",
-        "@org_tensorflow//tensorflow/python:platform",
-    ],
 )
 
 py_test(
@@ -190,8 +127,6 @@ py_test(
     srcs = ["python/kernel_tests/apply_deformation_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -201,8 +136,6 @@ py_test(
     srcs = ["python/kernel_tests/cubic_interpolation1d_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -212,8 +145,6 @@ py_test(
     srcs = ["python/kernel_tests/cubic_interpolation2d_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -223,8 +154,6 @@ py_test(
     srcs = ["python/kernel_tests/cubic_interpolation3d_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -233,8 +162,7 @@ py_test(
     srcs = ["python/kernel_tests/random_lut_controlpoints_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-    ],
+           ],
 )
 
 py_test(
@@ -242,8 +170,6 @@ py_test(
     srcs = ["python/kernel_tests/apply_tabulated_functions_op_test.py"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -255,8 +181,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":augmentation_ops",
-        "@org_tensorflow//tensorflow:tensorflow_py",
-        "@org_tensorflow//third_party/py/numpy",
     ],
 )
 
@@ -266,6 +190,5 @@ py_test(
     srcs = ["deformation_utils_test.py"],
     deps = [
         ":deformation_utils",
-        "@org_tensorflow//tensorflow:tensorflow_py",
     ],
 )

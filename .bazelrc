@@ -1,3 +1,2 @@
-# Support bazelrc through migration of location.
-# See https://github.com/bazelbuild/bazel/issues/6319
-import %workspace%/tools/bazel.rc
+build --action_env TF_HEADER_DIR="/usr/local/lib/python3.5/dist-packages/tensorflow/include"
+build --action_env TF_SHARED_LIBRARY_DIR="/usr/local/lib/python3.5/dist-packages/tensorflow"

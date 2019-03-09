@@ -3,6 +3,12 @@
 This package provides TensorFlow Ops for multidimensional volumetric image
 augmentation.
 
+## Differences from the main branch
+* Can use current tensorflow installed via pip
+* Only uses the pytests instead of cc_test
+* Can't generate a python file automatically so you will need to write the
+ documentation and interface manually.
+
 ## Install prerequities
 
 This project usings the [bazel build

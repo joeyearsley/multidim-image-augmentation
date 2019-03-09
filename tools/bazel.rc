@@ -7,8 +7,8 @@ build:release --copt=-mavx
 build:release --copt=-msse4.2
 
 # Options used to build with CUDA.
-build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
-build:cuda --define=using_cuda=true --define=using_cuda_nvcc=true
+#build:cuda --crosstool_top=@local_config_cuda//crosstool:toolchain
+#build:cuda --define=using_cuda=true --define=using_cuda_nvcc=true
 
 # Please note that MKL on MacOS or windows is still not supported.
 # If you would like to use a local MKL instead of downloading, please set the
